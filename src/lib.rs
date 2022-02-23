@@ -40,15 +40,17 @@ fn nucleotide_frequency(dna: &[Nucleotide]) -> HashMap<Nucleotide, u32> {
     return frequencies;
 }
 
-fn binary_search_for_codon(gene: &mut Gene, target_codon: &Codon) -> bool {
-    gene.sort();
+fn increment_nucleotide_count(frequencies: &mut HashMap<Nucleotide, u32>, nucleotide: &Nucleotide) {
+    *frequencies.get_mut(nucleotide).unwrap() += 1;
+}
 
+fn binary_search_for_codon(sorted_gene: &Gene, target_codon: &Codon) -> bool {
     let mut low = 0;
-    let mut high = gene.len() - 1;
+    let mut high = sorted_gene.len() - 1;
 
     while low <= high {
         let middle_codon_index = (low + high) / 2;
-        let middle_codon = &gene[middle_codon_index];
+        let middle_codon = &sorted_gene[middle_codon_index];
 
         if middle_codon < target_codon {
             low = middle_codon_index + 1;
@@ -70,10 +72,6 @@ fn str_to_gene(s: &str) -> Gene {
         .step_by(NUCLEOTIDES_IN_CODON)
         .map(|i| (nucleotides[i], nucleotides[i + 1], nucleotides[i + 2]))
         .collect();
-}
-
-fn increment_nucleotide_count(frequencies: &mut HashMap<Nucleotide, u32>, nucleotide: &Nucleotide) {
-    *frequencies.get_mut(nucleotide).unwrap() += 1;
 }
 
 fn naive_match(dna: &[Nucleotide], target_sequence: &[Nucleotide]) -> Vec<usize> {
@@ -105,19 +103,18 @@ mod tests {
     #[test]
     fn binary_search() {
         let gene_str = "ATATCTTAGAGGGAGGGCTGAGGGTTTGAAGTCC";
-
-        // Try to make non immutatble
         let mut gene = str_to_gene(gene_str);
+        gene.sort();
 
         let ata: Codon = (Nucleotide::A, Nucleotide::T, Nucleotide::A);
         let atc: Codon = (Nucleotide::A, Nucleotide::T, Nucleotide::C);
         let agg: Codon = (Nucleotide::A, Nucleotide::G, Nucleotide::G);
         let tcc: Codon = (Nucleotide::T, Nucleotide::C, Nucleotide::C);
 
-        assert!(binary_search_for_codon(&mut gene, &ata));
-        assert!(!binary_search_for_codon(&mut gene, &atc));
-        assert!(binary_search_for_codon(&mut gene, &agg));
-        assert!(!binary_search_for_codon(&mut gene, &tcc));
+        assert!(binary_search_for_codon(&gene, &ata));
+        assert!(!binary_search_for_codon(&gene, &atc));
+        assert!(binary_search_for_codon(&gene, &agg));
+        assert!(!binary_search_for_codon(&gene, &tcc));
     }
 
     #[test]
